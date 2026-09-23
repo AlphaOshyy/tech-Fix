@@ -41,4 +41,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public Cursor appointments(){return getReadableDatabase().rawQuery("SELECT * FROM appointments ORDER BY id DESC",null);}
     public Cursor history(){return getReadableDatabase().rawQuery("SELECT * FROM history ORDER BY id DESC",null);}
+    public Cursor technicians(){return getReadableDatabase().rawQuery("SELECT * FROM technicians ORDER BY branch,name",null);}
+    public Cursor spareParts(){return getReadableDatabase().rawQuery("SELECT * FROM spare_parts ORDER BY branch,name",null);}
+    public void updateAppointmentStatus(int id,String status){SQLiteDatabase d=getWritableDatabase();ContentValues v=new ContentValues();v.put("status",status);d.update("appointments",v,"id=?",new String[]{String.valueOf(id)});ContentValues h=new ContentValues();h.put("status",status);d.update("history",h,"id=(SELECT id FROM history ORDER BY id DESC LIMIT 1)",null);}
 }
