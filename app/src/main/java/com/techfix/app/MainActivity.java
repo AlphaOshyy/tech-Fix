@@ -13,6 +13,8 @@ import android.os.*;
 import android.provider.MediaStore;
 import android.view.*;
 import android.widget.*;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
@@ -50,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     TextView label(String s){TextView t=text(s,13,MUTED);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
     void margin(View v,int l,int top,int r,int bottom){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(dp(l),dp(top),dp(r),dp(bottom));v.setLayoutParams(p);}
     MaterialCardView card(){MaterialCardView c=new MaterialCardView(this);c.setRadius(dp(18));c.setCardElevation(dp(1));c.setStrokeWidth(dp(1));c.setStrokeColor(Color.rgb(226,231,239));c.setCardBackgroundColor(Color.WHITE);return c;}
-    MaterialButton button(String s,boolean filled){MaterialButton b=new MaterialButton(this);b.setText(s);b.setTextSize(14);b.setAllCaps(false);b.setCornerRadius(dp(12));b.setMinHeight(dp(48));b.setPadding(dp(16),0,dp(16),0);if(filled){b.setBackgroundColor(BLUE);b.setTextColor(Color.WHITE);}else{b.setTextColor(BLUE);b.setStrokeColor(android.content.res.ColorStateList.valueOf(BLUE));b.setStrokeWidth(dp(1));}return b;}
+    MaterialButton button(String s,boolean filled){MaterialButton b=new MaterialButton(this);b.setText(s);b.setTextSize(14);b.setAllCaps(false);b.setCornerRadius(dp(12));b.setMinHeight(dp(48));b.setPadding(dp(16),0,dp(16),0);b.setRippleColor(android.content.res.ColorStateList.valueOf(Color.rgb(220,232,255)));if(filled){b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(BLUE));b.setTextColor(Color.WHITE);}else{b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));b.setTextColor(BLUE);b.setStrokeColor(android.content.res.ColorStateList.valueOf(BLUE));b.setStrokeWidth(dp(1));}return b;}
     TextInputEditText input(String hint){TextInputLayout l=new TextInputLayout(this);l.setHint(hint);l.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);l.setBoxCornerRadii(dp(12),dp(12),dp(12),dp(12));TextInputEditText e=new TextInputEditText(this);e.setSingleLine(true);l.addView(e,new TextInputLayout.LayoutParams(-1,-2));content.addView(l);margin(l,0,0,0,12);return e;}
 
     void build(){
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         content.removeAllViews();
         pageTitle.setText("TechFix");
         pageSubtitle.setText(page.equals("Home")?"Computer & Mobile Repair":page);
-        switch(page){case "Home": home(); break; case "Services": services(); break; case "Book": book(); break; case "Track": track(); break; case "Manage": manage(); break; case "History": history(); break; default: home(); break;}
+        switch(page){case "Home": home(); break; case "Services": services(); break; case "Book": book(); break; case "Track": track(); break; case "Manage": manage(); break; case "History": history(); break; case "Map": map(); break; default: home(); break;}
     }
 
     void heroImage(String url,int height){
@@ -86,15 +88,33 @@ public class MainActivity extends AppCompatActivity {
     void home(){
         heroImage("https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",190);
         TextView h=heading("Repair without the hassle");content.addView(h);margin(h,0,0,0,8);
+        MaterialCardView status=card();LinearLayout statusBox=new LinearLayout(this);statusBox.setOrientation(LinearLayout.VERTICAL);statusBox.setPadding(dp(16),dp(14),dp(16),dp(14));TextView live=label("TECHFIX SERVICE STATUS");statusBox.addView(live);TextView liveText=text("●  Online · accepting repair requests",14,GREEN);liveText.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(liveText,0,5,0,0);statusBox.addView(liveText);TextView liveSub=text("Local branches · photo diagnostics · repair tracking",12,MUTED);statusBox.addView(liveSub);status.addView(statusBox);content.addView(status);margin(status,0,0,0,14);
         TextView p=text("Book a repair, find the closest branch, upload your device photo, and track every request from one place.",15,MUTED);p.setLineSpacing(0,1.15f);content.addView(p);margin(p,0,0,0,18);
 
         MaterialButton book=button("Book a repair",true);content.addView(book);margin(book,0,0,0,10);book.setOnClickListener(v->show("Book"));
-        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,20);locate.setOnClickListener(v->nearestBranch());
+        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,10);locate.setOnClickListener(v->nearestBranch());
+        MaterialButton map=button("View live branch map",false);content.addView(map);margin(map,0,0,0,20);map.setOnClickListener(v->show("Map"));
 
         TextView st=heading("Our branches");content.addView(st);margin(st,0,0,0,12);
         Cursor c=db.branches();while(c.moveToNext()){MaterialCardView card=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(16),dp(14),dp(16),dp(14));TextView n=text(c.getString(1),17,TEXT);n.setTypeface(Typeface.DEFAULT,Typeface.BOLD);box.addView(n);TextView a=text(c.getString(2)+"\n"+c.getString(3),13,MUTED);margin(a,0,5,0,0);box.addView(a);card.addView(box);content.addView(card);margin(card,0,0,0,10);}c.close();
 
-        MaterialCardView web=card();LinearLayout wb=new LinearLayout(this);wb.setOrientation(LinearLayout.VERTICAL);wb.setPadding(dp(16),dp(15),dp(16),dp(15));wb.addView(label("WEB SERVICE"));wb.addView(text("OpenStreetMap location lookup",16,TEXT));MaterialButton manage=button("Open management demo",false);wb.addView(manage);margin(manage,0,10,0,0);manage.setOnClickListener(v->show("Manage"));MaterialButton check=button("Test remote data",false);wb.addView(check);margin(check,0,10,0,0);check.setOnClickListener(v->remoteData());web.addView(wb);content.addView(web);margin(web,0,6,0,0);
+        MaterialCardView web=card();LinearLayout wb=new LinearLayout(this);wb.setOrientation(LinearLayout.VERTICAL);wb.setPadding(dp(16),dp(15),dp(16),dp(15));wb.addView(label("WEB SERVICE"));wb.addView(text("OpenStreetMap location lookup",16,TEXT));margin(wb.getChildAt(wb.getChildCount()-1),5,0,0,10);MaterialButton manage=button("Open management demo",false);wb.addView(manage);margin(manage,0,10,0,0);manage.setOnClickListener(v->show("Manage"));MaterialButton check=button("Test remote data",false);wb.addView(check);margin(check,0,10,0,0);check.setOnClickListener(v->remoteData());web.addView(wb);content.addView(web);margin(web,0,6,0,0);
+    }
+
+    void map(){
+        TextView h=heading("TechFix branch map");content.addView(h);margin(h,0,0,0,6);
+        TextView p=text("Live OpenStreetMap view with TechFix branch locations.",14,MUTED);content.addView(p);margin(p,0,0,0,14);
+        WebView mapView=new WebView(this);mapView.setWebViewClient(new WebViewClient());mapView.getSettings().setJavaScriptEnabled(true);mapView.getSettings().setDomStorageEnabled(true);mapView.setBackgroundColor(Color.rgb(232,237,244));content.addView(mapView,new LinearLayout.LayoutParams(-1,dp(360)));margin(mapView,0,0,0,14);
+        String html="<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'><style>html,body,#map{height:100%;margin:0}body{font-family:Arial;background:#eef2f7}</style></head><body><div id='map'></div><script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script><script>var map=L.map('map').setView([6.45,80.05],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);var places=[['TechFix Colombo',6.8921,79.8550,'Colombo 03'],['TechFix Galle',6.0329,80.2168,'Hirimbura Road, Galle']];places.forEach(function(x){L.marker([x[1],x[2]]).addTo(map).bindPopup('<b>'+x[0]+'</b><br>'+x[3]+'<br><br><a href="geo:'+x[1]+','+x[2]+'?q='+x[1]+','+x[2]+'">Open directions</a>');});</script></body></html>";
+        mapView.loadDataWithBaseURL("https://openstreetmap.org/",html,"text/html","UTF-8",null);
+        MaterialButton directions=button("Open Galle branch directions",true);content.addView(directions);margin(directions,0,0,0,10);directions.setOnClickListener(v->openDirections(6.0329,80.2168,"TechFix Galle"));
+        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,0);locate.setOnClickListener(v->nearestBranch());
+    }
+
+    void openDirections(double lat,double lng,String name){
+        Uri uri=Uri.parse("geo:"+lat+","+lng+"?q="+lat+","+lng+"("+Uri.encode(name)+")");
+        Intent intent=new Intent(Intent.ACTION_VIEW,uri);
+        try{startActivity(intent);}catch(ActivityNotFoundException e){Toast.makeText(this,"No map app is installed",Toast.LENGTH_SHORT).show();}
     }
 
     void services(){
