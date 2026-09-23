@@ -115,11 +115,37 @@ public class MainActivity extends AppCompatActivity {
     void map(){
         TextView h=heading("TechFix branch map");content.addView(h);margin(h,0,0,0,6);
         TextView p=text("Live OpenStreetMap view with TechFix branch locations.",14,MUTED);content.addView(p);margin(p,0,0,0,14);
-        WebView mapView=new WebView(this);mapView.setWebViewClient(new WebViewClient());mapView.getSettings().setJavaScriptEnabled(true);mapView.getSettings().setDomStorageEnabled(true);mapView.setBackgroundColor(Color.rgb(232,237,244));content.addView(mapView,new LinearLayout.LayoutParams(-1,dp(360)));margin(mapView,0,0,0,14);
-        String html="<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'><style>html,body,#map{height:100%;margin:0}body{font-family:Arial;background:#eef2f7}</style></head><body><div id='map'></div><script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script><script>var map=L.map('map').setView([6.45,80.05],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);var places=[['TechFix Colombo',6.8921,79.8550,'Colombo 03'],['TechFix Galle',6.0329,80.2168,'Hirimbura Road, Galle']];places.forEach(function(x){L.marker([x[1],x[2]]).addTo(map).bindPopup('<b>'+x[0]+'</b><br>'+x[3]+'<br><br><a href="geo:'+x[1]+','+x[2]+'?q='+x[1]+','+x[2]+'">Open directions</a>');});</script></body></html>";
+        WebView mapView=new WebView(this);
+        mapView.setWebViewClient(new WebViewClient());
+        mapView.getSettings().setJavaScriptEnabled(true);
+        mapView.getSettings().setDomStorageEnabled(true);
+        mapView.setBackgroundColor(Color.rgb(232,237,244));
+        content.addView(mapView,new LinearLayout.LayoutParams(-1,dp(360)));
+        margin(mapView,0,0,0,14);
+
+        String html =
+                "<!doctype html>"
+                + "<html><head>"
+                + "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+                + "<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'>"
+                + "<style>html,body,#map{height:100%;margin:0}body{font-family:Arial;background:#eef2f7}</style>"
+                + "</head><body>"
+                + "<div id='map'></div>"
+                + "<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>"
+                + "<script>"
+                + "var map=L.map('map').setView([6.45,80.05],9);"
+                + "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'OpenStreetMap contributors'}).addTo(map);"
+                + "var places=[['TechFix Colombo',6.8921,79.8550,'Colombo 03'],['TechFix Galle',6.0329,80.2168,'Hirimbura Road, Galle']];"
+                + "places.forEach(function(x){"
+                + "L.marker([x[1],x[2]]).addTo(map).bindPopup('<b>'+x[0]+'</b><br>'+x[3]);"
+                + "});"
+                + "</script></body></html>";
+
         mapView.loadDataWithBaseURL("https://openstreetmap.org/",html,"text/html","UTF-8",null);
-        MaterialButton directions=button("Open Galle branch directions",true);content.addView(directions);margin(directions,0,0,0,10);directions.setOnClickListener(v->openDirections(6.0329,80.2168,"TechFix Galle"));
-        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,0);locate.setOnClickListener(v->nearestBranch());
+        MaterialButton directions=button("Open Galle branch directions",true);content.addView(directions);margin(directions,0,0,0,10);
+        directions.setOnClickListener(v->openDirections(6.0329,80.2168,"TechFix Galle"));
+        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,0);
+        locate.setOnClickListener(v->nearestBranch());
     }
 
     void openDirections(double lat,double lng,String name){
