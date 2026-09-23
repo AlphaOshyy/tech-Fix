@@ -90,8 +90,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout hero=new LinearLayout(this);hero.setOrientation(LinearLayout.VERTICAL);hero.setPadding(dp(20),dp(22),dp(20),dp(20));
         GradientDrawable heroBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{Color.rgb(10,28,58),Color.rgb(23,105,224)});heroBg.setCornerRadius(dp(24));hero.setBackground(heroBg);content.addView(hero);margin(hero,0,0,0,16);
         TextView badge=text("TECHFIX  •  SERVICE CENTER",11,Color.rgb(190,220,255));badge.setTypeface(Typeface.DEFAULT,Typeface.BOLD);hero.addView(badge);
-        TextView title=text("Your device.
-Back in action.",30,Color.WHITE);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(title,0,10,0,8);hero.addView(title);
+        TextView title=text("Your device.\nBack in action.",30,Color.WHITE);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(title,0,10,0,8);hero.addView(title);
         TextView sub=text("Book repairs, track progress and find a nearby branch from one clean workspace.",14,Color.rgb(225,235,250));sub.setLineSpacing(0,1.12f);hero.addView(sub);
         MaterialButton heroBook=button("Book a repair",true);heroBook.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));heroBook.setTextColor(NAVY);hero.addView(heroBook);margin(heroBook,dp(0),16,0,0);heroBook.setOnClickListener(v->show("Book"));
 
