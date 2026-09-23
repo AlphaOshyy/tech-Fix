@@ -6,6 +6,7 @@ import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.*;
 import android.net.Uri;
 import android.os.*;
@@ -14,109 +15,157 @@ import android.view.*;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import java.io.*;
 import java.net.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import org.json.*;
 
 public class MainActivity extends AppCompatActivity {
-    LinearLayout root,content;
-    DatabaseHelper db;
-    TextView title, gpsText;
-    Uri photoUri;
-
-    int blue=Color.rgb(23,105,224), navy=Color.rgb(16,24,40);
+    private LinearLayout root, content, nav;
+    private TextView pageTitle, pageSubtitle;
+    private DatabaseHelper db;
+    private Uri photoUri;
+    private ImageView photoPreview;
+    private final int BLUE=Color.rgb(23,105,224), NAVY=Color.rgb(16,24,40), BG=Color.rgb(246,248,252), TEXT=Color.rgb(28,36,52), MUTED=Color.rgb(102,112,133), GREEN=Color.rgb(18,183,106), ORANGE=Color.rgb(247,144,9);
 
     @Override public void onCreate(Bundle b){
-        super.onCreate(b); db=new DatabaseHelper(this); build();
+        super.onCreate(b);
+        db=new DatabaseHelper(this);
+        getWindow().setStatusBarColor(NAVY);
+        getWindow().setNavigationBarColor(NAVY);
+        build();
     }
 
-    TextView tv(String s,int sp){ TextView t=new TextView(this);t.setText(s);t.setTextSize(sp);t.setTextColor(Color.DKGRAY);t.setPadding(16,12,16,12);return t; }
-    Button btn(String s){ Button b=new Button(this);b.setText(s);b.setAllCaps(false);return b; }
+    int dp(float v){return (int)(v*getResources().getDisplayMetrics().density+0.5f);}
+    TextView text(String s,float sp,int color){TextView t=new TextView(this);t.setText(s);t.setTextSize(sp);t.setTextColor(color);t.setIncludeFontPadding(false);return t;}
+    TextView heading(String s){TextView t=text(s,24,TEXT);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
+    TextView label(String s){TextView t=text(s,13,MUTED);t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
+    void margin(View v,int l,int top,int r,int bottom){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(dp(l),dp(top),dp(r),dp(bottom));v.setLayoutParams(p);}
+    MaterialCardView card(){MaterialCardView c=new MaterialCardView(this);c.setRadius(dp(18));c.setCardElevation(dp(1));c.setStrokeWidth(dp(1));c.setStrokeColor(Color.rgb(226,231,239));c.setCardBackgroundColor(Color.WHITE);return c;}
+    MaterialButton button(String s,boolean filled){MaterialButton b=new MaterialButton(this);b.setText(s);b.setTextSize(14);b.setAllCaps(false);b.setCornerRadius(dp(12));b.setMinHeight(dp(48));b.setPadding(dp(16),0,dp(16),0);if(filled){b.setBackgroundColor(BLUE);b.setTextColor(Color.WHITE);}else{b.setTextColor(BLUE);b.setStrokeColor(android.content.res.ColorStateList.valueOf(BLUE));b.setStrokeWidth(dp(1));}return b;}
+    TextInputEditText input(String hint){TextInputLayout l=new TextInputLayout(this);l.setHint(hint);l.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);l.setBoxCornerRadii(dp(12),dp(12),dp(12),dp(12));TextInputEditText e=new TextInputEditText(this);e.setSingleLine(true);l.addView(e,new TextInputLayout.LayoutParams(-1,-2));content.addView(l);margin(l,0,0,0,12);return e;}
 
     void build(){
-        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(Color.rgb(248,250,252));
-        LinearLayout head=new LinearLayout(this);head.setOrientation(LinearLayout.VERTICAL);head.setPadding(20,22,20,18);head.setBackgroundColor(navy);
-        title=tv("TechFix",26);title.setTextColor(Color.WHITE);head.addView(title);
-        TextView sub=tv("Computer & Mobile Repair",14);sub.setTextColor(Color.LTGRAY);head.addView(sub);
-        root.addView(head);
-        content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(16,16,16,16);
-        ScrollView sv=new ScrollView(this);sv.addView(content);root.addView(sv,new LinearLayout.LayoutParams(-1,0,1));
-        LinearLayout nav=new LinearLayout(this);nav.setPadding(6,4,6,6);nav.setBackgroundColor(Color.WHITE);
-        String[] ns={"Home","Services","Book","Track","History"};
-        for(String n:ns){Button x=btn(n);x.setOnClickListener(v->show(n));nav.addView(x,new LinearLayout.LayoutParams(0,56,1));}
-        root.addView(nav);setContentView(root);show("Home");
+        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
+        LinearLayout top=new LinearLayout(this);top.setOrientation(LinearLayout.VERTICAL);top.setPadding(dp(20),dp(18),dp(20),dp(16));top.setBackgroundColor(NAVY);
+        pageTitle=text("TechFix",24,Color.WHITE);pageTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);top.addView(pageTitle);
+        pageSubtitle=text("Computer & Mobile Repair",13,Color.rgb(205,214,230));margin(pageSubtitle,0,5,0,0);top.addView(pageSubtitle);
+        root.addView(top);
+        ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);
+        content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(18),dp(18),dp(18),dp(24));scroll.addView(content);
+        root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER);nav.setPadding(dp(6),dp(7),dp(6),dp(7));nav.setBackgroundColor(Color.WHITE);
+        String[] names={"Home","Services","Book","Track","History"};
+        for(String n:names){TextView b=text(n,11,MUTED);b.setGravity(Gravity.CENTER);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setPadding(2,dp(9),2,dp(9));b.setOnClickListener(v->show(n));nav.addView(b,new LinearLayout.LayoutParams(0,dp(50),1));}
+        root.addView(nav);
+        setContentView(root);
+        show("Home");
     }
 
     void show(String page){
-        content.removeAllViews();title.setText("TechFix  •  "+page);
-        if(page.equals("Home")) home();
-        else if(page.equals("Services")) services();
-        else if(page.equals("Book")) book();
-        else if(page.equals("Track")) track();
-        else history();
+        content.removeAllViews();
+        pageTitle.setText(page.equals("Home")?"TechFix":"TechFix");
+        pageSubtitle.setText(page.equals("Home")?"Computer & Mobile Repair":page);
+        if(page.equals("Home"))home(); else if(page.equals("Services"))services(); else if(page.equals("Book"))book(); else if(page.equals("Track"))track(); else history();
+    }
+
+    void heroImage(String url,int height){
+        ImageView img=new ImageView(this);img.setScaleType(ImageView.ScaleType.CENTER_CROP);img.setBackgroundColor(Color.rgb(225,232,242));content.addView(img,new LinearLayout.LayoutParams(-1,dp(height)));margin(img,0,0,0,18);ImageLoader.load(url,img);
     }
 
     void home(){
-        content.addView(tv("Repair support made simple",24));
-        content.addView(tv("Book a repair, locate your nearest branch, track your request, and keep your repair history.",16));
-        Button gps=btn("Find nearest TechFix branch");content.addView(gps);gps.setOnClickListener(v->nearestBranch());
-        gpsText=tv("GPS: waiting for location...",15);content.addView(gpsText);
-        content.addView(tv("Branches",20));
-        Cursor c=db.branches();while(c.moveToNext())content.addView(tv("• "+c.getString(1)+"\n"+c.getString(2)+"\n"+c.getString(3),15));c.close();
-        Button cam=btn("Take device photo");content.addView(cam);cam.setOnClickListener(v->camera());
-        Button remote=btn("Check free web service");content.addView(remote);remote.setOnClickListener(v->remoteData());
+        heroImage("https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",190);
+        TextView h=heading("Repair without the hassle");content.addView(h);margin(h,0,0,0,8);
+        TextView p=text("Book a repair, find the closest branch, upload your device photo, and track every request from one place.",15,MUTED);p.setLineSpacing(0,1.15f);content.addView(p);margin(p,0,0,0,18);
+
+        MaterialButton book=button("Book a repair",true);content.addView(book);margin(book,0,0,0,10);book.setOnClickListener(v->show("Book"));
+        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,20);locate.setOnClickListener(v->nearestBranch());
+
+        TextView st=heading("Our branches");content.addView(st);margin(st,0,0,0,12);
+        Cursor c=db.branches();while(c.moveToNext()){MaterialCardView card=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(16),dp(14),dp(16),dp(14));TextView n=text(c.getString(1),17,TEXT);n.setTypeface(Typeface.DEFAULT,Typeface.BOLD);box.addView(n);TextView a=text(c.getString(2)+"\n"+c.getString(3),13,MUTED);margin(a,0,5,0,0);box.addView(a);card.addView(box);content.addView(card);margin(card,0,0,0,10);}c.close();
+
+        MaterialCardView web=card();LinearLayout wb=new LinearLayout(this);wb.setOrientation(LinearLayout.VERTICAL);wb.setPadding(dp(16),dp(15),dp(16),dp(15));wb.addView(label("WEB SERVICE"));wb.addView(text("OpenStreetMap location lookup",16,TEXT));MaterialButton check=button("Test remote data",false);wb.addView(check);margin(check,0,10,0,0);check.setOnClickListener(v->remoteData());web.addView(wb);content.addView(web);margin(web,0,6,0,0);
     }
 
     void services(){
-        content.addView(tv("Repair services",24));
-        Cursor c=db.services();while(c.moveToNext()){content.addView(tv(c.getString(1)+"  |  "+c.getString(2)+"\nEstimated price: LKR "+c.getInt(3),16));}c.close();
+        TextView h=heading("Repair services");content.addView(h);margin(h,0,0,0,6);
+        TextView p=text("Clear service categories and estimated prices.",14,MUTED);content.addView(p);margin(p,0,0,0,16);
+        Cursor c=db.services();while(c.moveToNext()){
+            MaterialCardView card=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);box.setPadding(dp(16),dp(15),dp(16),dp(15));
+            LinearLayout left=new LinearLayout(this);left.setOrientation(LinearLayout.VERTICAL);left.setLayoutParams(new LinearLayout.LayoutParams(0,-2,1));TextView n=text(c.getString(1),16,TEXT);n.setTypeface(Typeface.DEFAULT,Typeface.BOLD);left.addView(n);TextView cat=text(c.getString(2),13,MUTED);margin(cat,0,5,0,0);left.addView(cat);box.addView(left);
+            TextView price=text("LKR "+String.format(Locale.US,"%,d",c.getInt(3)),15,BLUE);price.setTypeface(Typeface.DEFAULT,Typeface.BOLD);box.addView(price);card.addView(box);content.addView(card);margin(card,0,0,0,10);
+        }c.close();
+        MaterialButton b=button("Book a service",true);content.addView(b);margin(b,0,8,0,0);b.setOnClickListener(v->show("Book"));
     }
 
     void book(){
-        content.addView(tv("Book repair appointment",24));
-        EditText name=new EditText(this);name.setHint("Customer name");content.addView(name);
-        EditText device=new EditText(this);device.setHint("Device, e.g. iPhone 15 / Dell laptop");content.addView(device);
-        Spinner service=new Spinner(this);ArrayList<String> ss=new ArrayList<>();Cursor c=db.services();while(c.moveToNext())ss.add(c.getString(1));c.close();service.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,ss));content.addView(service);
-        Spinner branch=new Spinner(this);ArrayList<String> bs=new ArrayList<>();c=db.branches();while(c.moveToNext())bs.add(c.getString(1));c.close();branch.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,bs));content.addView(branch);
-        EditText date=new EditText(this);date.setHint("Preferred date, e.g. 2026-09-25");content.addView(date);
-        Button photo=btn("Attach device photo");content.addView(photo);photo.setOnClickListener(v->camera());
-        Button submit=btn("Submit repair request");content.addView(submit);
-        submit.setOnClickListener(v->{if(name.getText().toString().trim().isEmpty()||device.getText().toString().trim().isEmpty()){Toast.makeText(this,"Enter customer and device details",Toast.LENGTH_SHORT).show();return;}long id=db.appointment(name.getText().toString(),device.getText().toString(),service.getSelectedItem().toString(),branch.getSelectedItem().toString(),date.getText().toString(),photoUri==null?"":photoUri.toString());Toast.makeText(this,"Request #"+id+" received",Toast.LENGTH_LONG).show();show("Track");});
+        TextView h=heading("Book a repair");content.addView(h);margin(h,0,0,0,6);
+        TextView p=text("Tell us about the device. Your request is stored locally for offline coursework demonstration.",14,MUTED);content.addView(p);margin(p,0,0,0,18);
+        TextInputEditText name=input("Customer name");
+        TextInputEditText device=input("Device, e.g. iPhone 15 or Dell laptop");
+        TextView sl=label("Repair service");content.addView(sl);margin(sl,0,2,0,5);
+        Spinner service=new Spinner(this);ArrayList<String> ss=new ArrayList<>();Cursor c=db.services();while(c.moveToNext())ss.add(c.getString(1));c.close();service.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,ss));content.addView(service);margin(service,0,0,0,14);
+        TextView bl=label("Branch");content.addView(bl);margin(bl,0,2,0,5);
+        Spinner branch=new Spinner(this);ArrayList<String> bs=new ArrayList<>();c=db.branches();while(c.moveToNext())bs.add(c.getString(1));c.close();branch.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,bs));content.addView(branch);margin(branch,0,0,0,14);
+        TextInputEditText date=input("Preferred repair date");
+        date.setFocusable(false);date.setOnClickListener(v->pickDate(date));
+        TextView photoLabel=label("DEVICE PHOTO");content.addView(photoLabel);margin(photoLabel,0,2,0,8);
+        MaterialButton photo=button("Take a photo",false);content.addView(photo);margin(photo,0,8,0,8);photo.setOnClickListener(v->camera());
+        photoPreview=new ImageView(this);photoPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);photoPreview.setVisibility(View.GONE);content.addView(photoPreview,new LinearLayout.LayoutParams(-1,dp(180)));margin(photoPreview,0,0,0,14);
+        MaterialButton submit=button("Submit repair request",true);content.addView(submit);margin(submit,0,0,0,12);
+        submit.setOnClickListener(v->{String n=name.getText()==null?"":name.getText().toString().trim();String d=device.getText()==null?"":device.getText().toString().trim();if(n.isEmpty()||d.isEmpty()){Toast.makeText(this,"Enter your name and device details",Toast.LENGTH_SHORT).show();return;}String dt=date.getText()==null?"":date.getText().toString();long id=db.appointment(n,d,service.getSelectedItem().toString(),branch.getSelectedItem().toString(),dt,photoUri==null?"":photoUri.toString());new AlertDialog.Builder(this).setTitle("Request received").setMessage("Repair request #"+id+" has been saved.\nStatus: Received").setPositiveButton("Track request",(x,w)->show("Track")).setNegativeButton("Close",null).show();});
+    }
+
+    void pickDate(EditText e){
+        Calendar now=Calendar.getInstance();DatePickerDialog d=new DatePickerDialog(this,(v,y,m,day)->{Calendar x=Calendar.getInstance();x.set(y,m,day);e.setText(new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(x.getTime()));},now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));d.show();
     }
 
     void track(){
-        content.addView(tv("Repair tracking",24));
-        Cursor c=db.appointments();if(c.getCount()==0)content.addView(tv("No repair requests yet.",16));
-        while(c.moveToNext()){content.addView(tv("Request #"+c.getInt(0)+"\n"+c.getString(2)+" • "+c.getString(3)+"\nBranch: "+c.getString(4)+"\nDate: "+c.getString(5)+"\nStatus: "+c.getString(6),16));}c.close();
-        content.addView(tv("Payment status: Pending. Payment is represented as a demo flow for coursework.",14));
+        TextView h=heading("Repair tracking");content.addView(h);margin(h,0,0,0,6);TextView p=text("Follow the current status of every repair request.",14,MUTED);content.addView(p);margin(p,0,0,0,16);
+        Cursor c=db.appointments();if(c.getCount()==0){TextView e=text("No repair requests yet.",15,MUTED);content.addView(e);}while(c.moveToNext()){
+            MaterialCardView card=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(16),dp(15),dp(16),dp(15));
+            LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView id=text("REQUEST #"+c.getInt(0),12,MUTED);id.setTypeface(Typeface.DEFAULT,Typeface.BOLD);row.addView(id,new LinearLayout.LayoutParams(0,-2,1));TextView status=text(c.getString(6),12,GREEN);status.setTypeface(Typeface.DEFAULT,Typeface.BOLD);row.addView(status);box.addView(row);
+            TextView dev=text(c.getString(2)+"\n"+c.getString(3),16,TEXT);dev.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(dev,0,10,0,0);box.addView(dev);
+            TextView info=text(c.getString(4)+"\n"+(c.getString(5).isEmpty()?"Date not selected":c.getString(5)),13,MUTED);box.addView(info);card.addView(box);content.addView(card);margin(card,0,0,0,10);
+        }c.close();
+        MaterialCardView pay=card();LinearLayout pb=new LinearLayout(this);pb.setPadding(dp(16),dp(14),dp(16),dp(14));pb.setOrientation(LinearLayout.VERTICAL);pb.addView(label("PAYMENT"));pb.addView(text("Pending · demo payment flow",15,TEXT));pay.addView(pb);content.addView(pay);
     }
 
     void history(){
-        content.addView(tv("Repair history",24));
-        Cursor c=db.history();if(c.getCount()==0)content.addView(tv("No repair history yet.",16));
-        while(c.moveToNext())content.addView(tv(c.getString(1)+" • "+c.getString(2)+"\n"+c.getString(3)+" | "+c.getString(4)+" | "+c.getString(5),16));c.close();
+        TextView h=heading("Repair history");content.addView(h);margin(h,0,0,0,6);TextView p=text("Your previous repair requests stored on this device.",14,MUTED);content.addView(p);margin(p,0,0,0,16);
+        Cursor c=db.history();if(c.getCount()==0){TextView e=text("No repair history yet.",15,MUTED);content.addView(e);}while(c.moveToNext()){
+            MaterialCardView card=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(16),dp(14),dp(16),dp(14));TextView d=text(c.getString(1),16,TEXT);d.setTypeface(Typeface.DEFAULT,Typeface.BOLD);box.addView(d);TextView s=text(c.getString(2)+" · "+c.getString(3),13,MUTED);margin(s,0,6,0,0);box.addView(s);TextView st=text(c.getString(4)+" · "+c.getString(5),12,MUTED);box.addView(st);card.addView(box);content.addView(card);margin(card,0,0,0,10);
+        }c.close();
     }
 
     void camera(){
         if(ActivityCompat.checkSelfPermission(this,Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED){ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.CAMERA},20);return;}
-        Intent i=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);if(i.resolveActivity(getPackageManager())!=null)startActivityForResult(i,21);
+        try{
+            File dir=new File(getExternalFilesDir(null),"photos");if(!dir.exists())dir.mkdirs();File file=new File(dir,"device_"+System.currentTimeMillis()+".jpg");photoUri=FileProvider.getUriForFile(this,getPackageName()+".fileprovider",file);
+            Intent i=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);i.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);i.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_READ_URI_PERMISSION);startActivityForResult(i,21);
+        }catch(Exception e){Toast.makeText(this,"Camera could not start",Toast.LENGTH_SHORT).show();}
     }
-    @Override protected void onActivityResult(int r,int code,Intent data){super.onActivityResult(r,code,data);if(r==21&&data!=null){photoUri=data.getData();Toast.makeText(this,"Photo attached",Toast.LENGTH_SHORT).show();}}
+
+    @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==21&&result==RESULT_OK&&photoUri!=null){if(photoPreview!=null){photoPreview.setVisibility(View.VISIBLE);photoPreview.setImageURI(photoUri);}Toast.makeText(this,"Device photo attached",Toast.LENGTH_SHORT).show();}}
 
     void nearestBranch(){
         if(ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},22);return;}
-        LocationManager lm=(LocationManager)getSystemService(LOCATION_SERVICE);
-        Location last=null;try{last=lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);if(last==null)last=lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);}catch(Exception e){}
-        if(last==null){gpsText.setText("GPS unavailable. Try again outdoors.");return;}
-        double best=Double.MAX_VALUE;String bn="";
-        Cursor c=db.branches();while(c.moveToNext()){double d=distance(last.getLatitude(),last.getLongitude(),c.getDouble(4),c.getDouble(5));if(d<best){best=d;bn=c.getString(1);}}c.close();
-        gpsText.setText(String.format(Locale.US,"Nearest: %s\nDistance: %.1f km\nYour GPS: %.4f, %.4f",bn,best,best==Double.MAX_VALUE?0:last.getLatitude(),last.getLongitude()));
+        LocationManager lm=(LocationManager)getSystemService(LOCATION_SERVICE);Location last=null;try{last=lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);if(last==null)last=lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);}catch(Exception ignored){}
+        if(last==null){new AlertDialog.Builder(this).setTitle("Location unavailable").setMessage("Turn on location and try again. On the Pixel emulator, set a location in the emulator controls first.").setPositiveButton("OK",null).show();return;}
+        double best=Double.MAX_VALUE;String bn="",ba="";Cursor c=db.branches();while(c.moveToNext()){double d=distance(last.getLatitude(),last.getLongitude(),c.getDouble(4),c.getDouble(5));if(d<best){best=d;bn=c.getString(1);ba=c.getString(2);}}c.close();
+        new AlertDialog.Builder(this).setTitle("Nearest TechFix branch").setMessage(String.format(Locale.US,"%s\n%s\n\n%.1f km from your current location.",bn,ba,best)).setPositiveButton("OK",null).show();
     }
+
     double distance(double a,double b,double c,double d){double R=6371,la=Math.toRadians(c-a),lo=Math.toRadians(d-b);double x=Math.sin(la/2)*Math.sin(la/2)+Math.cos(Math.toRadians(a))*Math.cos(Math.toRadians(c))*Math.sin(lo/2)*Math.sin(lo/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 
     void remoteData(){
-        Toast.makeText(this,"Loading free Nominatim web service...",Toast.LENGTH_SHORT).show();
-        new Thread(()->{try{URL u=new URL("https://nominatim.openstreetmap.org/search?q=Galle%20Sri%20Lanka&format=json&limit=1");HttpURLConnection h=(HttpURLConnection)u.openConnection();h.setRequestProperty("User-Agent","TechFix-Student-App");BufferedReader r=new BufferedReader(new InputStreamReader(h.getInputStream()));StringBuilder s=new StringBuilder();String line;while((line=r.readLine())!=null)s.append(line);r.close();JSONArray a=new JSONArray(s.toString());String display=a.length()>0?a.getJSONObject(0).optString("display_name","Galle"):"No result";runOnUiThread(()->new AlertDialog.Builder(this).setTitle("Remote data").setMessage("OpenStreetMap Nominatim result:\n"+display).setPositiveButton("OK",null).show());}catch(Exception e){runOnUiThread(()->Toast.makeText(this,"Web service unavailable",Toast.LENGTH_SHORT).show());}}).start();
+        Toast.makeText(this,"Loading remote data...",Toast.LENGTH_SHORT).show();
+        new Thread(()->{try{URL u=new URL("https://nominatim.openstreetmap.org/search?q=Galle%20Sri%20Lanka&format=json&limit=1");HttpURLConnection h=(HttpURLConnection)u.openConnection();h.setConnectTimeout(8000);h.setReadTimeout(8000);h.setRequestProperty("User-Agent","TechFix-Student-App");BufferedReader r=new BufferedReader(new InputStreamReader(h.getInputStream()));StringBuilder s=new StringBuilder();String line;while((line=r.readLine())!=null)s.append(line);r.close();JSONArray a=new JSONArray(s.toString());String display=a.length()>0?a.getJSONObject(0).optString("display_name","Galle"):"No result";runOnUiThread(()->new AlertDialog.Builder(this).setTitle("Remote web service").setMessage(display).setPositiveButton("OK",null).show());}catch(Exception e){runOnUiThread(()->Toast.makeText(this,"Remote service unavailable. Try again.",Toast.LENGTH_SHORT).show());}}).start();
     }
 }
