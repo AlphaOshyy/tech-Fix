@@ -16,6 +16,8 @@ import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -65,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
         for(String n:names){TextView b=text(n,11,MUTED);b.setGravity(Gravity.CENTER);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setPadding(2,dp(9),2,dp(9));b.setOnClickListener(v->show(n));nav.addView(b,new LinearLayout.LayoutParams(0,dp(50),1));}
         root.addView(nav);
         setContentView(root);
+        ViewCompat.setOnApplyWindowInsetsListener(root,(v,insets)->{int top=insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;int bottom=insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;top=Math.max(top,dp(8));root.setPadding(0,top,0,0);nav.setPadding(dp(6),dp(7),dp(6),Math.max(dp(7),bottom));return insets;});
+        ViewCompat.requestApplyInsets(root);
         show("Home");
     }
 
