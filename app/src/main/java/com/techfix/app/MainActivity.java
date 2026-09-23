@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.location.*;
 import android.net.Uri;
 import android.os.*;
@@ -86,19 +87,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void home(){
-        heroImage("https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",190);
-        TextView h=heading("Repair without the hassle");content.addView(h);margin(h,0,0,0,8);
-        MaterialCardView status=card();LinearLayout statusBox=new LinearLayout(this);statusBox.setOrientation(LinearLayout.VERTICAL);statusBox.setPadding(dp(16),dp(14),dp(16),dp(14));TextView live=label("TECHFIX SERVICE STATUS");statusBox.addView(live);TextView liveText=text("●  Online · accepting repair requests",14,GREEN);liveText.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(liveText,0,5,0,0);statusBox.addView(liveText);TextView liveSub=text("Local branches · photo diagnostics · repair tracking",12,MUTED);statusBox.addView(liveSub);status.addView(statusBox);content.addView(status);margin(status,0,0,0,14);
-        TextView p=text("Book a repair, find the closest branch, upload your device photo, and track every request from one place.",15,MUTED);p.setLineSpacing(0,1.15f);content.addView(p);margin(p,0,0,0,18);
+        LinearLayout hero=new LinearLayout(this);hero.setOrientation(LinearLayout.VERTICAL);hero.setPadding(dp(20),dp(22),dp(20),dp(20));
+        GradientDrawable heroBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{Color.rgb(10,28,58),Color.rgb(23,105,224)});heroBg.setCornerRadius(dp(24));hero.setBackground(heroBg);content.addView(hero);margin(hero,0,0,0,16);
+        TextView badge=text("TECHFIX  •  SERVICE CENTER",11,Color.rgb(190,220,255));badge.setTypeface(Typeface.DEFAULT,Typeface.BOLD);hero.addView(badge);
+        TextView title=text("Your device.
+Back in action.",30,Color.WHITE);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(title,0,10,0,8);hero.addView(title);
+        TextView sub=text("Book repairs, track progress and find a nearby branch from one clean workspace.",14,Color.rgb(225,235,250));sub.setLineSpacing(0,1.12f);hero.addView(sub);
+        MaterialButton heroBook=button("Book a repair",true);heroBook.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));heroBook.setTextColor(NAVY);hero.addView(heroBook);margin(heroBook,dp(0),16,0,0);heroBook.setOnClickListener(v->show("Book"));
 
-        MaterialButton book=button("Book a repair",true);content.addView(book);margin(book,0,0,0,10);book.setOnClickListener(v->show("Book"));
-        MaterialButton locate=button("Find nearest branch",false);content.addView(locate);margin(locate,0,0,0,10);locate.setOnClickListener(v->nearestBranch());
-        MaterialButton map=button("View live branch map",false);content.addView(map);margin(map,0,0,0,20);map.setOnClickListener(v->show("Map"));
+        LinearLayout stats=new LinearLayout(this);stats.setGravity(Gravity.CENTER);content.addView(stats);margin(stats,0,0,0,16);
+        String[] statTitles={"2","5","24/7"};String[] statLabels={"Branches","Services","Request access"};for(int i=0;i<3;i++){MaterialCardView sc=card();LinearLayout sb=new LinearLayout(this);sb.setOrientation(LinearLayout.VERTICAL);sb.setPadding(dp(12),dp(13),dp(12),dp(13));TextView num=text(statTitles[i],20,BLUE);num.setTypeface(Typeface.DEFAULT,Typeface.BOLD);sb.addView(num);TextView lab=text(statLabels[i],11,MUTED);margin(lab,0,3,0,0);sb.addView(lab);sc.addView(sb);LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(0,-2,1);sp.setMargins(i==0?0:dp(5),0,i==2?0:dp(5),0);stats.addView(sc,sp);}
 
-        TextView st=heading("Our branches");content.addView(st);margin(st,0,0,0,12);
-        Cursor c=db.branches();while(c.moveToNext()){MaterialCardView card=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(16),dp(14),dp(16),dp(14));TextView n=text(c.getString(1),17,TEXT);n.setTypeface(Typeface.DEFAULT,Typeface.BOLD);box.addView(n);TextView a=text(c.getString(2)+"\n"+c.getString(3),13,MUTED);margin(a,0,5,0,0);box.addView(a);card.addView(box);content.addView(card);margin(card,0,0,0,10);}c.close();
+        MaterialCardView status=card();LinearLayout statusBox=new LinearLayout(this);statusBox.setOrientation(LinearLayout.HORIZONTAL);statusBox.setGravity(Gravity.CENTER_VERTICAL);statusBox.setPadding(dp(16),dp(14),dp(16),dp(14));
+        TextView dot=text("●",18,GREEN);statusBox.addView(dot);LinearLayout statusText=new LinearLayout(this);statusText.setOrientation(LinearLayout.VERTICAL);TextView live=text("Service center online",15,TEXT);live.setTypeface(Typeface.DEFAULT,Typeface.BOLD);statusText.addView(live);TextView liveSub=text("Requests are ready to be submitted",12,MUTED);margin(liveSub,0,3,0,0);statusText.addView(liveSub);statusBox.addView(statusText,new LinearLayout.LayoutParams(0,-2,1));TextView ready=text("READY",11,GREEN);ready.setTypeface(Typeface.DEFAULT,Typeface.BOLD);statusBox.addView(ready);status.addView(statusBox);content.addView(status);margin(status,0,0,0,16);
 
-        MaterialCardView web=card();LinearLayout wb=new LinearLayout(this);wb.setOrientation(LinearLayout.VERTICAL);wb.setPadding(dp(16),dp(15),dp(16),dp(15));wb.addView(label("WEB SERVICE"));wb.addView(text("OpenStreetMap location lookup",16,TEXT));margin(wb.getChildAt(wb.getChildCount()-1),5,0,0,10);MaterialButton manage=button("Open management demo",false);wb.addView(manage);margin(manage,0,10,0,0);manage.setOnClickListener(v->show("Manage"));MaterialButton check=button("Test remote data",false);wb.addView(check);margin(check,0,10,0,0);check.setOnClickListener(v->remoteData());web.addView(wb);content.addView(web);margin(web,0,6,0,0);
+        TextView qh=heading("Quick actions");content.addView(qh);margin(qh,0,0,0,10);
+        MaterialCardView actions=card();LinearLayout actionBox=new LinearLayout(this);actionBox.setOrientation(LinearLayout.VERTICAL);actionBox.setPadding(dp(14),dp(8),dp(14),dp(8));
+        MaterialButton locate=button("Find nearest branch",false);actionBox.addView(locate);margin(locate,0,4,0,0);locate.setOnClickListener(v->nearestBranch());
+        MaterialButton map=button("Open live branch map",false);actionBox.addView(map);margin(map,0,4,0,0);map.setOnClickListener(v->show("Map"));
+        MaterialButton historyBtn=button("View repair history",false);actionBox.addView(historyBtn);historyBtn.setOnClickListener(v->show("History"));actions.addView(actionBox);content.addView(actions);margin(actions,0,0,0,16);
+
+        TextView bh=heading("Our branches");content.addView(bh);margin(bh,0,0,0,10);
+        Cursor c=db.branches();while(c.moveToNext()){MaterialCardView branchCard=card();LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(16),dp(14),dp(16),dp(14));TextView n=text(c.getString(1),16,TEXT);n.setTypeface(Typeface.DEFAULT,Typeface.BOLD);box.addView(n);TextView a=text(c.getString(2),13,MUTED);margin(a,4,5,0,0);box.addView(a);TextView phone=text(c.getString(3),12,BLUE);box.addView(phone);branchCard.addView(box);content.addView(branchCard);margin(branchCard,0,0,0,8);}c.close();
+
+        MaterialCardView web=card();LinearLayout wb=new LinearLayout(this);wb.setOrientation(LinearLayout.VERTICAL);wb.setPadding(dp(16),dp(15),dp(16),dp(15));wb.addView(label("CONNECTED SERVICES"));TextView webTitle=text("OpenStreetMap + remote lookup",15,TEXT);webTitle.setTypeface(Typeface.DEFAULT,Typeface.BOLD);margin(webTitle,5,0,0,4);wb.addView(webTitle);wb.addView(text("Real web requests are used for location data.",12,MUTED));MaterialButton check=button("Test remote service",false);wb.addView(check);margin(check,10,0,0,0);check.setOnClickListener(v->remoteData());web.addView(wb);content.addView(web);margin(web,0,6,0,0);
     }
 
     void map(){
