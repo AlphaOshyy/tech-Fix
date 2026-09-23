@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         content.removeAllViews();
         pageTitle.setText(page.equals("Home")?"TechFix":"TechFix");
         pageSubtitle.setText(page.equals("Home")?"Computer & Mobile Repair":page);
-        if(page.equals("Home"))home(); else if(page.equals("Services"))services(); else if(page.equals("Book"))book(); else if(page.equals("Track"))track(); else history();
+        if(page.equals("Home"))home(); else if(page.equals("Services"))services(); else if(page.equals("Book"))book(); else if(page.equals("Track"))track(); else if(page.equals("Manage"))manage(); else history();
     }
 
     void heroImage(String url,int height){
